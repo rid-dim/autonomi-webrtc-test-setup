@@ -83,11 +83,20 @@ evmlib 0.9.1 / ant-protocol 2.3.2:
    certificate violated two rules: an eccentric validity window
    (epoch..9999) and — decisive — an **empty issuer/subject** (RFC 5280
    §4.1.2.4 requires a non-empty issuer; an empty subject additionally
-   requires a subjectAltName). Fix: constant validity 2026–2036 and constant
-   `CN=WebRTC` issuer/subject — still fully deterministic. Diagnosed live:
-   browser-side `about:webrtc` showed ICE nominated + consent refreshed,
-   node-side str0m logged the incoming alert 42. With the fix, Chrome,
-   Safari, Chrome mobile and Firefox all connect.
+   requires a subjectAltName) — and, the subtle one, **(issuer, serialNumber)
+   must be unique per certificate** (§4.1.2.2): NSS keeps a process-wide
+   temporary cert store keyed on that pair, so when every node shipped the
+   identical `CN=WebRTC` + serial 1, the first node a tab dialled won the
+   cache entry and every *other* node's certificate collided with it — the
+   fingerprint pin then failed against the cached (wrong) cert. Symptom:
+   bootstrap connects, every discovered peer fails. Fix: constant validity
+   2026–2036 plus serial and CN suffix derived from SHA-256 of the node's
+   SPKI — unique per node, still a pure function of the seed. Diagnosed with
+   browser-side `about:webrtc`, node-side str0m alert logs, and a real
+   Firefox 154 driven against a local devnet; verified 10/10 data channels.
+   With the fix, Chrome, Safari, Chrome mobile and Firefox all connect —
+   confirmed on the public demo via a geckodriver smoke test (494 KB over 5
+   direct connections in Firefox).
 6. **ICE host candidates cannot be an unspecified address.** Any listener
    bound to `0.0.0.0` (public single-port nodes, devnet `--host`, the
    dedicated full-ICE answerer's ephemeral socket) failed every handshake:
