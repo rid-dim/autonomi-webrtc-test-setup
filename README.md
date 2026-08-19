@@ -34,14 +34,29 @@ flowchart LR
 > storing directly, exactly like the native client. Load spreads across the
 > network; no node carries another node's payload.
 
+## 🌐 Live demo
+
+**<https://webrtc-demo.autonomi.space>** — the page comes from an ordinary
+web server; the files on it do not. The browser pulls them chunk-by-chunk
+over direct WebRTC connections from a **public 20-node devnet running RFC 9443
+single-port mode**: QUIC and WebRTC share **one UDP socket per node**.
+Unofficial community demo, not operated by Autonomi. (Fun detail: the
+`BegBlag.mp3` there has the exact same content address as on mainnet.)
+
 ## What's here
 
 | Path | What it is | Home |
 |---|---|---|
 | `ant-node/` (submodule) | The node change: a feature-gated WebRTC-Direct listener + peer discovery, sharing the existing request handler and node identity. **This is the upstream contribution** (ADR-0010). | fork of `WithAutonomi/ant-node`, branch `feat/webrtc-direct-listener` |
 | `ant-wasm-client/` (submodule) | The browser SDK + demo webapp: connect, discover, download, upload, pay. Standalone, `wasm-bindgen` based. | its own repo |
+| `saorsa-transport/` (submodule) | Two small additive patches for single-port: `P2pConfig::abstract_socket` (QUIC endpoint runs on a caller-provided socket) + disabling QUIC bit greasing on injected sockets (RFC 9287 §4 — required when demultiplexing). **PR-ready upstream ask.** | fork of `WithAutonomi/saorsa-transport`, branch `feat/abstract-socket-injection` |
+| `saorsa-core/` (submodule) | The passthrough: `NodeConfig::injected_sockets` hands a pre-bound socket per address family down to saorsa-transport. **PR-ready upstream ask.** | fork of `WithAutonomi/saorsa-core`, branch `feat/abstract-socket-injection` |
 | `docs/` | The design and the evidence — start with [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/FINDINGS.md`](docs/FINDINGS.md). | here |
 | `ant-client/` | The official CLI, used unmodified as the baseline/oracle for round-trip tests. | clone of `WithAutonomi/ant-client` |
+
+The single-port node work lives on `ant-node` branch
+`feat/rfc9443-single-port-prep` (first-byte demux per RFC 9443, shared-socket
+session mux, `--webrtc-single-port`; ADR-0011).
 
 `.janus/` (if present) is the internal project tracker; `docs/` is the
 external distillation.
@@ -58,6 +73,15 @@ external distillation.
   the storing nodes → accepted after their **on-chain** payment verification.
   The native `ant` CLI then downloads the browser-uploaded file
   byte-identically. (A MetaMask payer is wired for interactive use.)
+
+- **Single port (RFC 9443)**, verified on the public demo devnet: with
+  `--webrtc-single-port` a node serves QUIC **and** WebRTC on its one UDP
+  port — datagrams are routed by first byte (STUN 0–3 / DTLS 20–63 → WebRTC;
+  QUIC 64–127 / 192–255 → QUIC). `lsof` shows a single socket per node.
+  Two findings from running this for real: QUIC bit greasing must be off on
+  a demultiplexed port (RFC 9287 §4), and an ICE host candidate can never be
+  an unspecified bind address (hence `--webrtc-advertise-ip` / devnet
+  `--host`). IPv4-only for now (saorsa-core has no v6-only listen mode).
 
 Evidence: [`docs/evidence/`](docs/evidence).
 
@@ -102,7 +126,8 @@ page or via `ant file download <address>`.
    against a real network: the str0m transport choice, the PQC tunnel, the
    bugs found and fixed, benchmarks.
 5. `ant-node/docs/adr/ADR-0010-webrtc-direct-browser-listener.md` — the
-   proposed design record for the node change.
+   proposed design record for the node change; `ADR-0011-rfc9443-single-port-mode.md`
+   (on branch `feat/rfc9443-single-port-prep`) for single-port mode.
 
 ## Open points / not yet done
 
@@ -120,7 +145,15 @@ page or via `ant file download <address>`.
   byte-identical).
 - **Upstream MR** into `WithAutonomi/ant-node`: needs a Linear issue and
   likely slicing (GET+discovery+ADR → full chunk pass-through+devnet →
-  RFC 9443 single-port). The on-chain **ECDSA payment signature** is the only
-  non-PQ surface (inherent to Arbitrum; see POST-QUANTUM.md).
+  RFC 9443 single-port). The saorsa hooks (`abstract_socket` /
+  `injected_sockets`) are separate small additive PRs to
+  saorsa-transport/saorsa-core. The on-chain **ECDSA payment signature** is
+  the only non-PQ surface (inherent to Arbitrum; see POST-QUANTUM.md).
+- **`--host` devnets and external *CLI* clients:** DHT peer discovery hands
+  external CLI clients 0 peers because all nodes share one IP, so
+  saorsa-core's source-disjoint address proof can never pass. The browser
+  path is unaffected (WebRTC discovery uses its own info lane); uploads are
+  done server-side. Pre-existing upstream behaviour, documented here for
+  honesty.
 - Two `ant-node` e2e integration tests were flaky under heavy parallel load;
   re-check on an idle machine against upstream `main`.

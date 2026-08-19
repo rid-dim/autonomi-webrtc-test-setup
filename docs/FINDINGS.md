@@ -67,6 +67,22 @@ evmlib 0.9.1 / ant-protocol 2.3.2:
    raced two requests on the same connection's response frame. Fix: a
    per-connection async request lock — same-connection requests queue,
    different connections run truly parallel.
+4. **QUIC bit greasing breaks single-port demultiplexing.** A 20-node
+   single-port devnet would not stabilise: saorsa-transport (a quinn fork)
+   negotiates `grease_quic_bit` (RFC 9287) by default, so peers sent
+   short-header packets with the fixed bit cleared — first bytes below 0x40
+   that the RFC 9443 first-byte demux routes into the DTLS lane or drops.
+   RFC 9287 §4 names exactly this precondition: an endpoint that relies on
+   the fixed bit must not offer the parameter. Fix: greasing is disabled on
+   the injected-socket path (saorsa-transport fork, one endpoint-config line).
+5. **ICE host candidates cannot be an unspecified address.** Any listener
+   bound to `0.0.0.0` (public single-port nodes, devnet `--host`, the
+   dedicated full-ICE answerer's ephemeral socket) failed every handshake:
+   str0m rejects `0.0.0.0` as a host candidate and discards STUN whose
+   destination matches no local candidate. Loopback devnets never showed it
+   because they bind a concrete IP. Fix: one `candidate_addr()` rule — a
+   concrete bind IP wins; an unspecified bind takes the configured advertise
+   IP (`--webrtc-advertise-ip` / devnet `--host`); neither → startup error.
 
 ## Performance
 
