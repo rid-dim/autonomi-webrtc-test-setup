@@ -1,0 +1,10 @@
+[submodule "ant-node"]
+	path = ant-node
+	url = git@github.com:rid-dim/ant-node.git
+	branch = feat/webrtc-direct-listener
+[submodule "ant-wasm-client"]
+	path = ant-wasm-client
+	url = git@github.com:rid-dim/ant-wasm-client.git
+[submodule "ant-client"]
+	path = ant-client
+	url = https://github.com/WithAutonomi/ant-client.git

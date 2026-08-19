@@ -4,3 +4,7 @@
 # Scratch / OS
 .DS_Store
 *.log
+
+# Reference prior-art repos (their own GitHub repos), not part of this setup
+autonomi-webrtc/
+exp-ant-wasm/
