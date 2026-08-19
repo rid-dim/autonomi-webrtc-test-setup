@@ -75,7 +75,20 @@ evmlib 0.9.1 / ant-protocol 2.3.2:
    RFC 9287 §4 names exactly this precondition: an endpoint that relies on
    the fixed bit must not offer the parameter. Fix: greasing is disabled on
    the injected-socket path (saorsa-transport fork, one endpoint-config line).
-5. **ICE host candidates cannot be an unspecified address.** Any listener
+5. **Firefox validates WebRTC DTLS certificates against RFC 5280.** Chrome
+   and Safari only check the pinned fingerprint; Firefox's NSS additionally
+   parses and sanity-checks the certificate and kills the handshake with a
+   fatal `bad_certificate` alert (42) on violations — ICE succeeds, consent
+   keeps refreshing, but no DataChannel ever opens. Our deterministic
+   certificate violated two rules: an eccentric validity window
+   (epoch..9999) and — decisive — an **empty issuer/subject** (RFC 5280
+   §4.1.2.4 requires a non-empty issuer; an empty subject additionally
+   requires a subjectAltName). Fix: constant validity 2026–2036 and constant
+   `CN=WebRTC` issuer/subject — still fully deterministic. Diagnosed live:
+   browser-side `about:webrtc` showed ICE nominated + consent refreshed,
+   node-side str0m logged the incoming alert 42. With the fix, Chrome,
+   Safari, Chrome mobile and Firefox all connect.
+6. **ICE host candidates cannot be an unspecified address.** Any listener
    bound to `0.0.0.0` (public single-port nodes, devnet `--host`, the
    dedicated full-ICE answerer's ephemeral socket) failed every handshake:
    str0m rejects `0.0.0.0` as a host candidate and discards STUN whose
