@@ -108,10 +108,13 @@ page or via `ant file download <address>`.
 
 - **MetaMask path** is wired but only interactively testable (the Anvil
   payer is the default, no-click path).
-- **NAT'd nodes without port forwarding**: ICE signaling over the existing
-  connection is designed, not yet built.
-- **Shrunk (large) data maps** in the browser client: flat maps work;
-  recursive shrink resolution is a follow-up.
+- **NAT'd nodes without port forwarding**: ICE signaling (STUN reflector +
+  SDP relay + full-ICE answerer) — see ARCHITECTURE. Cone NAT reachable;
+  symmetric NAT a deliberate loss. Verifiable end to end only against real
+  NAT (loopback exercises the signaling path, not the hole-punch).
+- **Large files**: supported both directions via shrunk data maps (verified:
+  20 MiB CLI-upload → browser download, 14 MiB browser-upload → CLI download,
+  byte-identical).
 - **Upstream MR** into `WithAutonomi/ant-node`: needs a Linear issue and
   likely slicing (GET+discovery+ADR → full chunk pass-through+devnet →
   RFC 9443 single-port). The on-chain **ECDSA payment signature** is the only

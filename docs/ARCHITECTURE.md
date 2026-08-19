@@ -103,12 +103,30 @@ transport is interchangeable.
 4. A node answers questions and serves its own data; it never relays another
    node's payloads.
 
-## Deliberately out of scope (for now)
+## NAT'd nodes without port forwarding (ICE signaling)
 
-- **NAT'd nodes without port forwarding** — the established connection can
-  double as an ICE signaling relay (offer/answer/candidates are bytes, not
-  payloads) so browsers hole-punch to such peers. Designed, not yet built.
+The established connection to any reachable node doubles as an **ICE signaling
+channel** — offer/answer are bytes, not payloads — so the browser can
+hole-punch a *new direct* connection to a NAT'd node without any payload
+relay:
+
+- Any reachable node is a **STUN server** for the browser: it answers a bare
+  STUN binding request with the browser's observed address, giving a clean
+  server-reflexive candidate (and sidestepping Chrome's mDNS host-candidate
+  obfuscation).
+- A reachable node **relays the SDP** to the target over a QUIC-lane protocol
+  (`autonomi.ant.webrtc-signal.v1`); the target answers in **full ICE** mode
+  (not ice-lite, so it actively punches) and includes its
+  saorsa-observed external address as a reflexive candidate.
+- The browser then connects **directly** to the target; the relay carried only
+  signaling.
+
+Cone NAT is reachable this way. **Symmetric NAT is a deliberate loss** — the
+close group has 7 peers with redundancy (GET needs one; quotes/PUT prefer
+reachable peers), so a symmetric-NAT node is simply a poorer browser-facing
+peer rather than a correctness problem. No TURN-style payload relay.
+
+## Deliberately out of scope
+
 - **Node-to-node WebRTC** — QUIC remains the right node transport; WebRTC
   earns its place only as the browser-facing edge.
-- **Shrunk (very large) data maps in the browser client** — the flat-map path
-  is implemented; recursive shrink resolution is a follow-up.
