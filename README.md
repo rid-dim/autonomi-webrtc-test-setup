@@ -74,6 +74,13 @@ external distillation.
   The native `ant` CLI then downloads the browser-uploaded file
   byte-identically. (A MetaMask payer is wired for interactive use.)
 
+- **Browser matrix: Chrome, Safari, Chrome mobile, Firefox.** Firefox needed
+  RFC 5280-conformant certificates — NSS parses even fingerprint-pinned WebRTC
+  certs and rejects empty DNs, eccentric validity windows, and (the trap)
+  fleet-wide identical (issuer, serial), which its process-wide cert cache
+  keys on. Full story in [`docs/FINDINGS.md`](docs/FINDINGS.md); automated
+  Firefox check: [`scripts/ff-demo-smoke.sh`](scripts/ff-demo-smoke.sh)
+  (geckodriver, raw WebDriver).
 - **Single port (RFC 9443)**, verified on the public demo devnet: with
   `--webrtc-single-port` a node serves QUIC **and** WebRTC on its one UDP
   port — datagrams are routed by first byte (STUN 0–3 / DTLS 20–63 → WebRTC;
