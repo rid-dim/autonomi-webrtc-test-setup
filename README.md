@@ -109,9 +109,12 @@ page or via `ant file download <address>`.
 - **MetaMask path** is wired but only interactively testable (the Anvil
   payer is the default, no-click path).
 - **NAT'd nodes without port forwarding**: ICE signaling (STUN reflector +
-  SDP relay + full-ICE answerer) — see ARCHITECTURE. Cone NAT reachable;
-  symmetric NAT a deliberate loss. Verifiable end to end only against real
-  NAT (loopback exercises the signaling path, not the hole-punch).
+  SDP relay + full-ICE answerer) is implemented on both sides and verified
+  end to end on a loopback devnet — the browser fetches a chunk from a
+  non-bootstrap node reached purely via relayed ICE signaling. Loopback
+  exercises the full mechanism; true NAT hole-punching additionally needs
+  real NAT + per-socket reflexive candidates. Cone NAT reachable; symmetric
+  NAT a deliberate loss (see ARCHITECTURE).
 - **Large files**: supported both directions via shrunk data maps (verified:
   20 MiB CLI-upload → browser download, 14 MiB browser-upload → CLI download,
   byte-identical).
