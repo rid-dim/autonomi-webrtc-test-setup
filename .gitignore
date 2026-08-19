@@ -1,0 +1,6 @@
+# Internal project tracker (Janus) — kept local, not part of the public docs.
+.janus/
+
+# Scratch / OS
+.DS_Store
+*.log
