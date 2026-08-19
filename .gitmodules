@@ -1,10 +1,18 @@
 [submodule "ant-node"]
 	path = ant-node
 	url = git@github.com:rid-dim/ant-node.git
-	branch = feat/webrtc-direct-listener
+	branch = feat/rfc9443-single-port-prep
 [submodule "ant-wasm-client"]
 	path = ant-wasm-client
 	url = git@github.com:rid-dim/ant-wasm-client.git
 [submodule "ant-client"]
 	path = ant-client
 	url = https://github.com/WithAutonomi/ant-client.git
+[submodule "saorsa-core"]
+	path = saorsa-core
+	url = git@github.com:rid-dim/saorsa-core.git
+	branch = feat/abstract-socket-injection
+[submodule "saorsa-transport"]
+	path = saorsa-transport
+	url = git@github.com:rid-dim/saorsa-transport.git
+	branch = feat/abstract-socket-injection
