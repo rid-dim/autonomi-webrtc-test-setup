@@ -112,6 +112,25 @@ evmlib 0.9.1 / ant-protocol 2.3.2:
   and a warm discovery cache (was ~30 s serial). On loopback the WebRTC
   handshake is cheap; on a real network, DHT/discovery latency dominates, which
   is why discovery results and connections are cached and reused.
+- **Per-connection throughput is capped at 128 KiB / RTT by str0m.**
+  `Channel::write` refuses data beyond `MAX_BUFFERED_ACROSS_STREAMS`
+  (128 KiB), and that counter only drops when a SACK acknowledges the bytes —
+  so it bounds *unacknowledged* data, capping bulk transfer at ~4 MB/s over a
+  30 ms path and ~2 MB/s over 60 ms regardless of cwnd. Parallel chunk fetch
+  across connections masks it, which is why aggregate numbers look fine.
+  A patched str0m (cap → 1 MiB, matching the peer's default advertised rwnd)
+  plus two node-side queue fixes measured **6.5–7.4×** at 30–60 ms RTT on a
+  loss-free delay-relay harness (`perf/datachannel-throughput` branch,
+  `rid-dim/str0m` `feat/configurable-send-buffer`; the proper upstream shape
+  is an `RtcConfig` knob — PR-worthy to algesten/str0m).
+- **Lab numbers are not deployment numbers.** The first deployment of that
+  patch went out validated only against the ordered, loss-free relay; the
+  public demo is served over real WAN with loss, reordering and (that
+  evening) a congested measurement line, where nothing could be proven and a
+  regression could not be ruled out — so it was reverted the same hour. The
+  patch stays parked until the harness can inject loss/jitter and the gain
+  is shown under realistic conditions. (Same lesson as RFC 9287 and the NSS
+  certificate cache: every layer of realism found a new bug.)
 
 ## What a reviewer should scrutinise
 

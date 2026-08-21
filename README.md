@@ -51,6 +51,7 @@ Unofficial community demo, not operated by Autonomi. (Fun detail: the
 | `ant-wasm-client/` (submodule) | The browser SDK + demo webapp: connect, discover, download, upload, pay. Standalone, `wasm-bindgen` based. | its own repo |
 | `saorsa-transport/` (submodule) | Two small additive patches for single-port: `P2pConfig::abstract_socket` (QUIC endpoint runs on a caller-provided socket) + disabling QUIC bit greasing on injected sockets (RFC 9287 §4 — required when demultiplexing). **PR-ready upstream ask.** | fork of `WithAutonomi/saorsa-transport`, branch `feat/abstract-socket-injection` |
 | `saorsa-core/` (submodule) | The passthrough: `NodeConfig::injected_sockets` hands a pre-bound socket per address family down to saorsa-transport. **PR-ready upstream ask.** | fork of `WithAutonomi/saorsa-core`, branch `feat/abstract-socket-injection` |
+| `str0m/` (submodule) | One-line throughput patch: str0m's 128 KiB unacked-bytes cap limits every DataChannel to 128 KiB/RTT; raised to 1 MiB. **Parked** until validated under packet loss (see FINDINGS); upstream-PR candidate for algesten/str0m. | fork of `algesten/str0m`, branch `feat/configurable-send-buffer` |
 | `docs/` | The design and the evidence — start with [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs/FINDINGS.md`](docs/FINDINGS.md). | here |
 | `ant-client/` | The official CLI, used unmodified as the baseline/oracle for round-trip tests. | clone of `WithAutonomi/ant-client` |
 
