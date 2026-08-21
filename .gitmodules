@@ -16,3 +16,7 @@
 	path = saorsa-transport
 	url = git@github.com:rid-dim/saorsa-transport.git
 	branch = feat/abstract-socket-injection
+[submodule "str0m"]
+	path = str0m
+	url = git@github.com:rid-dim/str0m.git
+	branch = feat/configurable-send-buffer
